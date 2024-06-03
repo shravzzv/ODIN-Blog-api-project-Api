@@ -9,7 +9,7 @@ router.get('/', commentsController.getComments)
 router.get('/:id', commentsController.getComment)
 
 // Create a new comment
-router.post('/', commentsController.createComment)
+router.post('/:postId', commentsController.createComment)
 
 // Update a comment
 router.put('/:id', commentsController.updateComment)

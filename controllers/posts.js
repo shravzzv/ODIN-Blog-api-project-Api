@@ -1,4 +1,5 @@
 const Post = require('../models/post')
+const Comment = require('../models/comment')
 const asyncHandler = require('express-async-handler')
 const { body, validationResult, matchedData } = require('express-validator')
 const multerUtils = require('../utils/multer.utils')
@@ -10,7 +11,7 @@ const cloudinaryUtils = require('../utils/cloudinary.util')
  * Allows for sorting the posts using created time, updated time and the titles.
  * Allows for pagination.
  *
- * todo: implement filtering.
+ * todo: implement filtering (you can filter by user, date created, or date updated, publishing status, etc.).
  */
 exports.getPosts = asyncHandler(async (req, res) => {
   const { sort, limit, skip } = req.query
@@ -27,10 +28,11 @@ exports.getPosts = asyncHandler(async (req, res) => {
 })
 
 /**
- * Gets a single post.
+ * Gets a single post with its comments.
  */
 exports.getPost = asyncHandler(async (req, res) => {
   const post = await Post.findById(req.params.id)
+
   if (!post) return res.status(404).send('Not found.')
   res.json(post)
 })
@@ -136,5 +138,11 @@ exports.deletePost = asyncHandler(async (req, res) => {
     await cloudinaryUtils.deleteUploadedFile(post.coverImgUrl)
 
   await Post.findByIdAndDelete(req.params.id)
+
+  // delete all comments as well if there are any
+  if (post.comments.length) {
+    post.comments.forEach(async (id) => await Comment.findByIdAndDelete(id))
+  }
+
   res.status(200).send('Post deleted successfully.')
 })
