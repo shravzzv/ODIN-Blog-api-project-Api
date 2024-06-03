@@ -7,6 +7,7 @@
     "dev": "SET DEBUG=odin-blog-api-project-api:* & nodemon ./bin/www"
   },
   "dependencies": {
+    "cloudinary": "^2.2.0",
     "cookie-parser": "~1.4.4",
     "debug": "~2.6.9",
     "dotenv": "^16.4.5",
@@ -14,7 +15,9 @@
     "express-async-handler": "^1.2.0",
     "express-validator": "^7.1.0",
     "mongoose": "^8.4.1",
-    "morgan": "~1.9.1"
+    "morgan": "~1.9.1",
+    "multer": "^1.4.5-lts.1",
+    "uuid": "^9.0.1"
   },
   "devDependencies": {
     "nodemon": "^3.1.2"

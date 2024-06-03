@@ -5,6 +5,7 @@ const logger = require('morgan')
 require('dotenv').config()
 
 require('./config/db.config')
+require('./config/cloudinary.config')
 const indexRouter = require('./routes/index')
 const usersRouter = require('./routes/users')
 const postsRouter = require('./routes/posts')
