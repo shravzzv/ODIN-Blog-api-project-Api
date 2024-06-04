@@ -38,13 +38,10 @@ exports.createComment = [
     const errors = validationResult(req)
     const { content } = matchedData(req, { onlyValidData: false })
 
-    req.userid = '665c258650974f64b5e2ddef'
-    // todo: make author the signed in user
-
     const newComment = new Comment({
       content,
       post: req.params.postId,
-      author: req.userid,
+      author: req.user.id,
     })
 
     if (errors.isEmpty()) {

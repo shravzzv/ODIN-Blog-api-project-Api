@@ -1,6 +1,9 @@
 const express = require('express')
 const router = express.Router()
 const commentsController = require('../controllers/comments')
+const authMiddleware = require('../middlewares/auth.middleware')
+
+router.use(authMiddleware.protect)
 
 // GET all comments
 router.get('/', commentsController.getComments)

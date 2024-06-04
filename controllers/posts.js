@@ -2,7 +2,7 @@ const Post = require('../models/post')
 const Comment = require('../models/comment')
 const asyncHandler = require('express-async-handler')
 const { body, validationResult, matchedData } = require('express-validator')
-const multerUtils = require('../utils/multer.utils')
+const multerUtils = require('../utils/multer.util')
 const handleImage = require('../middlewares/handleImage')
 const cloudinaryUtils = require('../utils/cloudinary.util')
 
@@ -60,13 +60,10 @@ exports.createPost = [
     const errors = validationResult(req)
     const { title, content } = matchedData(req, { onlyValidData: false })
 
-    req.userid = '665c258650974f64b5e2ddef'
-    // todo: make author the signed in user
-
     const post = new Post({
       title,
       content,
-      author: req.userid,
+      author: req.user.id,
       coverImgUrl: req.uploadedUrl || '',
     })
 

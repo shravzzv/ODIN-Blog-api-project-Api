@@ -1,6 +1,9 @@
 const express = require('express')
 const router = express.Router()
 const postsController = require('../controllers/posts')
+const authMiddleware = require('../middlewares/auth.middleware')
+
+router.use(authMiddleware.protect)
 
 // GET all posts
 router.get('/', postsController.getPosts)
