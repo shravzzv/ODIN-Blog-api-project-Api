@@ -6,9 +6,8 @@ This repository provides the backend API for a blog application, built using Exp
 
 ## Features
 
-- RESTful API for managing blog posts and comments.
+- RESTful API for managing users, posts and comments for a simple blog.
 - User authentication with JWT (JSON Web Tokens) and Passport.js.
-- Support for marking posts as published or unpublished.
 
 ## Technologies Used
 
@@ -31,16 +30,21 @@ The API provides various endpoints for CRUD (Create, Read, Update, Delete) opera
 
 ### Endpoints
 
-- `/posts`:
-  - `GET`: Retrieve all posts (published) or specific post by ID.
-  - `POST` (protected): Create a new post.
-  - `PUT` (protected): Update an existing post.
-  - `DELETE` (protected): Delete a post.
-- `/posts/:id/publish:` (protected) Toggle publish state of a post.
-- `/comments`:
+- `/posts`(protected):
+  - `GET`: Retrieve all posts.
+  - `GET/:ID`: Retrieve a specific post.
+  - `POST`: Create a new post.
+  - `PUT/:ID`: Update an existing post.
+  - `DELETE:/ID`: Delete a post.
+- `/comments`(protected):
   - `GET`: Retrieve all comments for a specific post.
-  - `POST` (protected): Create a new comment on a post.
-  - `DELETE` (protected): Delete a comment.
+  - `POST`: Create a new comment on a post.
+  - `DELETE/:ID`: Delete a comment.
+  - `UPDATE/:ID`: Update a comment.
+- `/user`:
+  - `POST SIGNUP`: Create a new user.
+  - `POST SIGNIN` : Signin a user.
+  - `GET USER/:ID` : Get a specific user alongwith the user's posts.
 
 ### Authentication
 
@@ -49,11 +53,11 @@ The API provides various endpoints for CRUD (Create, Read, Update, Delete) opera
 
 ### Example Usage with Postman:
 
-1. Set up a POST request to the login endpoint (details to be added).
+1. Set up a POST request to the signin endpoint.
 2. Send login credentials in the request body.
 3. Upon successful login, store the JWT token received in the response.
 4. Create a new GET request to /posts (or other protected endpoints).
-5. Add the Authorization: Bearer <your_jwt_token> header to the request.
+5. Add the Authorization: Bearer `<your_jwt_token>` header to the request.
 
 ### Additional Notes
 
