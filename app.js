@@ -5,8 +5,11 @@ const logger = require('morgan')
 require('dotenv').config()
 
 require('./config/db.config')
-const indexRouter = require('./routes/index')
+require('./config/passport.config')
+require('./config/cloudinary.config')
 const usersRouter = require('./routes/users')
+const postsRouter = require('./routes/posts')
+const commentsRouter = require('./routes/comments')
 
 const app = express()
 
@@ -16,7 +19,8 @@ app.use(express.urlencoded({ extended: false }))
 app.use(cookieParser())
 app.use(express.static(path.join(__dirname, 'public')))
 
-app.use('/', indexRouter)
 app.use('/users', usersRouter)
+app.use('/posts', postsRouter)
+app.use('/comments', commentsRouter)
 
 module.exports = app
