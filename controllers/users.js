@@ -1,4 +1,5 @@
 const User = require('../models/user')
+const Post = require('../models/post')
 const asyncHandler = require('express-async-handler')
 const { body, validationResult, matchedData } = require('express-validator')
 const bcrypt = require('bcryptjs')
@@ -172,3 +173,16 @@ exports.signin = [
     })(req, res)
   },
 ]
+
+/**
+ * Get a single user with all of their posts and comments.
+ */
+exports.userGet = asyncHandler(async (req, res) => {
+  const user = await User.findById(req.params.id)
+
+  if (!user) return res.status(401).send('User does not exist.')
+
+  const posts = await Post.find({ author: req.params.id }).populate('comments')
+
+  res.json({ user, posts })
+})

@@ -134,12 +134,12 @@ exports.deletePost = asyncHandler(async (req, res) => {
   if (post.coverImgUrl)
     await cloudinaryUtils.deleteUploadedFile(post.coverImgUrl)
 
-  await Post.findByIdAndDelete(req.params.id)
-
   // delete all comments as well if there are any
   if (post.comments.length) {
     post.comments.forEach(async (id) => await Comment.findByIdAndDelete(id))
   }
+
+  await Post.findByIdAndDelete(req.params.id)
 
   res.status(200).send('Post deleted successfully.')
 })

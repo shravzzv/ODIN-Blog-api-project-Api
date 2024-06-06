@@ -40,7 +40,6 @@ exports.createComment = [
 
     const newComment = new Comment({
       content,
-      post: req.params.postId,
       author: req.user.id,
     })
 
