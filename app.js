@@ -9,6 +9,7 @@ require('dotenv').config()
 require('./config/db.config')
 require('./config/passport.config')
 require('./config/cloudinary.config')
+const indexRouter = require('./routes/index')
 const usersRouter = require('./routes/users')
 const postsRouter = require('./routes/posts')
 const commentsRouter = require('./routes/comments')
@@ -27,6 +28,7 @@ const limiter = RateLimit({
 })
 app.use(limiter) // 30 requests per minute
 
+app.use('/', indexRouter)
 app.use('/users', usersRouter)
 app.use('/posts', postsRouter)
 app.use('/comments', commentsRouter)
