@@ -10,8 +10,6 @@ const UserSchema = new Schema(
     password: { type: String, required: true },
     profilePicUrl: { type: String, default: '' },
     bio: { type: String, default: '' },
-    posts: [{ type: Schema.Types.ObjectId, ref: 'Post' }],
-    comments: [{ type: Schema.Types.ObjectId, ref: 'Comment' }],
   },
   {
     timestamps: true,

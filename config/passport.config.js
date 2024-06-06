@@ -50,14 +50,13 @@ passport.use(
       jwtFromRequest: ExtractJWT.fromAuthHeaderAsBearerToken(),
       secretOrKey: process.env.JWT_SECRET,
     },
-    function (jwtPayload, cb) {
-      return User.findById(jwtPayload.id)
-        .then((user) => {
-          return cb(null, user)
-        })
-        .catch((err) => {
-          return cb(err)
-        })
+    async function (jwtPayload, cb) {
+      try {
+        const user = await User.findById(jwtPayload.id)
+        return cb(null, user)
+      } catch (err) {
+        return cb(err)
+      }
     }
   )
 )
