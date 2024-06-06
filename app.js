@@ -2,6 +2,8 @@ const express = require('express')
 const path = require('path')
 const cookieParser = require('cookie-parser')
 const logger = require('morgan')
+const compression = require('compression')
+const RateLimit = require('express-rate-limit')
 require('dotenv').config()
 
 require('./config/db.config')
@@ -18,6 +20,12 @@ app.use(express.json())
 app.use(express.urlencoded({ extended: false }))
 app.use(cookieParser())
 app.use(express.static(path.join(__dirname, 'public')))
+app.use(compression())
+const limiter = RateLimit({
+  windowMs: 1 * 60 * 1000,
+  max: 30,
+})
+app.use(limiter) // 30 requests per minute
 
 app.use('/users', usersRouter)
 app.use('/posts', postsRouter)
