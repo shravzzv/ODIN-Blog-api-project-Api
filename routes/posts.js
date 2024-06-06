@@ -1,9 +1,9 @@
 const express = require('express')
 const router = express.Router()
 const postsController = require('../controllers/posts')
-const authMiddleware = require('../middlewares/auth.middleware')
+const passport = require('passport')
 
-router.use(authMiddleware.protect)
+router.use(passport.authenticate('jwt', { session: false }))
 
 // GET all posts
 router.get('/', postsController.getPosts)

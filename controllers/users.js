@@ -5,6 +5,7 @@ const bcrypt = require('bcryptjs')
 const multerUtils = require('../utils/multer.util')
 const handleImage = require('../middlewares/handleImage')
 const passport = require('passport')
+const jwt = require('jsonwebtoken')
 
 /**
  * Creates a new user.
@@ -91,7 +92,11 @@ exports.signup = [
       user.password = hashedPassword
 
       await user.save()
-      next()
+
+      res.json({
+        user,
+        message: 'New account has been created, you can now sign in.',
+      })
     } else {
       const allErrors = errors.array()
       if (req.imageError)
@@ -104,19 +109,6 @@ exports.signup = [
         .status(401)
         .json({ message: 'Failed signup', errors: allErrors })
     }
-  }),
-
-  asyncHandler(async (req, res, next) => {
-    passport.authenticate('local', (err, user, info) => {
-      if (err) return next(err)
-      if (!user) {
-        return res.status(401).json({ message: 'Login failed', errors: [info] })
-      }
-      req.logIn(user, (loginErr) => {
-        if (loginErr) return next(loginErr)
-        return res.send('Signup and authentication successfull.')
-      })
-    })(req, res, next)
   }),
 ]
 
@@ -132,8 +124,9 @@ exports.signin = [
     .isLength({ max: 20 })
     .withMessage('username must be a maximum of 20 characters long.')
     .escape()
-    .custom(async (username) => {
+    .custom(async (username, { req }) => {
       const user = await User.findOne({ username }, '_id')
+      if (user) req.body.userId = user.id
       if (!user) throw new Error(`Username doesn't exist.`)
     }),
 
@@ -152,34 +145,30 @@ exports.signin = [
     }
   }),
 
-  asyncHandler(async (req, res, next) => {
-    passport.authenticate('local', (err, user, info) => {
-      if (err) return next(err)
-      if (!user) {
-        return res.status(401).json({ message: 'Login failed', errors: [info] })
+  function (req, res, next) {
+    passport.authenticate('local', { session: false }, (err, user, info) => {
+      if (err || !user) {
+        return res.status(400).json({
+          message: 'Authentication failed',
+          user: user,
+          info,
+        })
       }
-      req.logIn(user, (loginErr) => {
-        if (loginErr) return next(loginErr)
-        // todo: handle JWT
-        return res.send('Signin and authentication successfull')
+      req.login(user, { session: false }, (err) => {
+        if (err) {
+          res.send(err)
+        }
+        jwt.sign(
+          { id: req.body.userId },
+          process.env.JWT_SECRET,
+          {
+            expiresIn: '24h',
+          },
+          (err, token) => {
+            res.json({ user, token })
+          }
+        )
       })
-    })(req, res, next)
-  }),
+    })(req, res)
+  },
 ]
-
-/**
- * Handle logout on POST.
- */
-exports.logout = asyncHandler(async (req, res, next) => {
-  req.logout((err) => {
-    if (err) return next(err)
-    res.send('You are logged out.')
-  })
-})
-
-/**
- * Get details of a single user.
- */
-exports.getUser = asyncHandler(async (req, res) => {
-  res.send('getUser not implemented')
-})
