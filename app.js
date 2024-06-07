@@ -4,6 +4,7 @@ const cookieParser = require('cookie-parser')
 const logger = require('morgan')
 const compression = require('compression')
 const RateLimit = require('express-rate-limit')
+const cors = require('cors')
 require('dotenv').config()
 
 require('./config/db.config')
@@ -27,6 +28,13 @@ const limiter = RateLimit({
   max: 30,
 })
 app.use(limiter) // 30 requests per minute
+app.use(
+  cors({
+    origin: '*',
+    credentials: true,
+    optionSuccessStatus: 200,
+  })
+)
 
 app.use('/', indexRouter)
 app.use('/users', usersRouter)
