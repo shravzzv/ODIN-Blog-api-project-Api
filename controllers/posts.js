@@ -31,7 +31,7 @@ exports.getPosts = asyncHandler(async (req, res) => {
  * Gets a single post with its comments.
  */
 exports.getPost = asyncHandler(async (req, res) => {
-  const post = await Post.findById(req.params.id)
+  const post = await Post.findById(req.params.id).populate('comments')
 
   if (!post) return res.status(404).send('Not found.')
   res.json(post)
