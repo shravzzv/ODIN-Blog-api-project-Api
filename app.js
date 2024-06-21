@@ -17,24 +17,19 @@ const commentsRouter = require('./routes/comments')
 
 const app = express()
 
+app.use(cors())
 app.use(logger('dev'))
 app.use(express.json())
 app.use(express.urlencoded({ extended: false }))
 app.use(cookieParser())
 app.use(express.static(path.join(__dirname, 'public')))
 app.use(compression())
-const limiter = RateLimit({
-  windowMs: 1 * 60 * 1000,
-  max: 30,
-})
-app.use(limiter) // 30 requests per minute
 app.use(
-  cors({
-    origin: '*',
-    credentials: true,
-    optionSuccessStatus: 200,
+  RateLimit({
+    windowMs: 1 * 60 * 1000,
+    max: 30,
   })
-)
+) // 30 requests per minute
 
 app.use('/', indexRouter)
 app.use('/users', usersRouter)
