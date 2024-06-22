@@ -174,6 +174,7 @@ exports.userGet = asyncHandler(async (req, res) => {
 
 /**
  * Update a user.
+ * Can update every detail of the user except for the password.
  */
 exports.userUpdate = [
   multerUtils.upload.single('file'),
@@ -232,48 +233,57 @@ exports.userUpdate = [
   body('bio').trim().optional().escape(),
 
   asyncHandler(async (req, res) => {
+    if (req.user.id !== req.params.id)
+      return res.status(401).json({
+        message: 'Unauthorized. You can update your own account only.',
+      })
+
     const errors = validationResult(req)
-    const sanitizedInput = matchedData(req, {
+    const sanitizedData = matchedData(req, {
       onlyValidData: false,
       includeOptionals: true,
     })
 
-    const newUser = new User({
-      ...sanitizedInput,
-      profilePicUrl: req.uploadedUrl || '',
+    const updatedUser = new User({
+      ...req.user._doc,
+      ...sanitizedData,
+      profilePicUrl: req.uploadedUrl,
     })
 
-    if (errors.isEmpty() && !req.imageError) {
-      const hashedPassword = await bcrypt.hash(matchedData(req).password, 10)
-      newUser.password = hashedPassword
-
-      await newUser.save()
-
-      const token = jwt.sign({ id: newUser.id }, process.env.JWT_SECRET, {
-        expiresIn: '2h',
+    if (req.uploadedUrl && req.uploadedUrl !== req.user.profilePicUrl) {
+      await User.findByIdAndUpdate(req.user.id, {
+        $set: { profilePicUrl: req.uploadedUrl },
       })
+    }
 
-      res.json({ token })
+    if (errors.isEmpty() && !req.imageError) {
+      await User.findByIdAndUpdate(req.user.id, updatedUser)
+      res.send('User updated successfully.')
     } else {
       const allErrors = errors.array()
+
       if (req.imageError)
         allErrors.push({
           msg: req.imageError.message,
           path: 'file',
         })
 
-      return res
+      res
         .status(401)
-        .json({ message: 'Failed signup', errors: allErrors })
+        .json({ message: 'Update user failed.', errors: allErrors })
     }
   }),
 ]
 
 /**
  * Deletes a user.
- * A user can be deleted only when they have no posts.
  */
 exports.userDelete = asyncHandler(async (req, res) => {
+  if (req.user.id !== req.params.id)
+    return res.status(401).json({
+      message: 'Unauthorized. You can delete your own account only.',
+    })
+
   // delete user profilePicture from cloudinary if present
   if (req.user.profilePicUrl) {
     await cloudinaryUtils.deleteUploadedFile(req.user.profilePicUrl)
@@ -282,5 +292,3 @@ exports.userDelete = asyncHandler(async (req, res) => {
   await User.findByIdAndDelete(req.user.id)
   res.send('User deleted successfully.')
 })
-
-// todo: implement the delete and update user routes
