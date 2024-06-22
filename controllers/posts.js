@@ -20,6 +20,7 @@ exports.getPosts = asyncHandler(async (req, res) => {
     .limit(limit)
     .skip(skip)
     .sort(sort?.split(',').join(' '))
+    .populate('comments')
 
   // limit limits the number of results, if 0 or empty returns all
   // skip skips the results, if 0 or empty, doesn't skip anything
