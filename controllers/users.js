@@ -165,7 +165,7 @@ exports.signin = [
 exports.userGet = asyncHandler(async (req, res) => {
   const user = await User.findById(req.params.id)
 
-  if (!user) return res.status(401).send('User does not exist.')
+  if (!user) return res.status(401).json({message: 'User does not exist.'})
 
   const posts = await Post.find({ author: req.params.id }).populate('comments')
 
@@ -258,7 +258,7 @@ exports.userUpdate = [
 
     if (errors.isEmpty() && !req.imageError) {
       await User.findByIdAndUpdate(req.user.id, updatedUser)
-      res.send('User updated successfully.')
+      res.json({ message: 'User updated successfully.' })
     } else {
       const allErrors = errors.array()
 
@@ -290,5 +290,5 @@ exports.userDelete = asyncHandler(async (req, res) => {
   }
 
   await User.findByIdAndDelete(req.user.id)
-  res.send('User deleted successfully.')
+  res.json({ message: 'User deleted successfully.' })
 })
