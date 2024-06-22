@@ -8,7 +8,6 @@ const cors = require('cors')
 require('dotenv').config()
 
 require('./config/db.config')
-require('./config/passport.config')
 require('./config/cloudinary.config')
 const indexRouter = require('./routes/index')
 const usersRouter = require('./routes/users')

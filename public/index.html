@@ -11,10 +11,211 @@
       referrerpolicy="no-referrer"
     />
     <link rel="stylesheet" href="./stylesheets/main.css" />
-    <script src="./javascripts/script.js"></script>
+    <script src="./javascripts/script.js" defer></script>
+    <link rel="shortcut icon" href="./images/favicon.svg" type="image/x-icon" />
     <title>Blog API</title>
   </head>
   <body>
-    <h1>Blog API</h1>
+    <h1>Blog REST API</h1>
+
+    <p>
+      This is a REST API for the
+      <a
+        href="https://www.theodinproject.com/lessons/nodejs-blog-api"
+        target="_blank"
+        >Blog API</a
+      >
+      project from The Odin Project.
+    </p>
+
+    <p>
+      The project repository is hosted
+      <a
+        href="https://github.com/shravzzv/ODIN-Blog-api-project-Api"
+        target="_blank"
+        >here</a
+      >
+      on GitHub. Submit any issues or contribute to this project if you desire.
+    </p>
+
+    <h2>Available end points</h2>
+
+    <p>
+      The routes don't require authentication unless specified. Verification is
+      to be done via a <code>jsonwebtoken</code> acquired using
+      <code>signup</code> or <code>signin</code>. The token is expected to be
+      sent as a <code>Authorization</code> header.
+    </p>
+
+    <h3><code>/users</code></h3>
+
+    <dl>
+      <dt><code>POST /users/signup</code></dt>
+      <dd>
+        Request body is expected to contain the following (these correspond to
+        an input's <code>name</code> attribute.):
+      </dd>
+      <ul>
+        <li><code>firstName</code></li>
+        <li><code>lastName</code></li>
+        <li><code>email</code></li>
+        <li><code>username</code></li>
+        <li><code>password</code></li>
+        <li><code>passwordConfirm</code></li>
+        <li><code>bio</code> (optional)</li>
+        <li><code>file</code> (optional, a profile picture)</li>
+      </ul>
+      <dd>
+        If there are no validation errors, returns a `jsonwebtoken` as the
+        response. Otherwise, it sends the validation errors.
+      </dd>
+      <hr />
+
+      <dt><code>POST /users/signin</code></dt>
+      <dd>Request body is expected to contain the following:</dd>
+      <ul>
+        <li><code>username</code></li>
+        <li><code>password</code></li>
+      </ul>
+      <dd>
+        If there are no validation errors, returns a `jsonwebtoken` as the
+        response. Otherwise, it sends the validation errors.
+      </dd>
+      <hr />
+
+      <dt>
+        <a href="http://localhost:3000/users/66617dfcea1e9f4cbd9d5dc0">
+          <code>GET /users/:id</code>
+        </a>
+      </dt>
+      <dd>
+        Get the details of a specific user alongwith all of their posts. As seen
+        in the route heading, requires the <code>id</code> of a specific user as
+        a parameter. If the user is not present, returns an error 404 response.
+      </dd>
+      <hr />
+
+      <dl>
+        <dt><code>PUT /users/:id</code></dt>
+        <dd>
+          Update a user. Request body is the same as the
+          <code>signup</code> route except for the <code>password</code> and
+          <code>passwordConfirm</code> values. No password update feature is
+          provided here.
+        </dd>
+      </dl>
+      <hr />
+
+      <dl>
+        <dt><code>DELETE /users/:id</code></dt>
+        <dd>Delete a user.</dd>
+      </dl>
+      <hr />
+    </dl>
+
+    <h3><code>/posts</code></h3>
+    <dl>
+      <dt>
+        <a href="http://localhost:3000/posts">
+          <code>GET /posts</code>
+        </a>
+      </dt>
+      <dd>
+        Get all the posts from the database. Accepts a <code>sort</code> query
+        string parameter to sort the results. Also supports pagination by using
+        <code>limit</code> and <code>skip</code> query string parameters.
+      </dd>
+      <hr />
+
+      <dt>
+        <a href="http://localhost:3000/posts/66617e6eea1e9f4cbd9d5dc9">
+          <code>GET /posts/:id</code>
+        </a>
+      </dt>
+      <dd>
+        Get a single specific post from the database. If the post is not
+        present, returns an error 404 response.
+      </dd>
+      <hr />
+
+      <dt>(Protected) <code>POST /posts</code></dt>
+      <dd>
+        Create a new post. Request body is expected to contain the following:
+      </dd>
+      <ul>
+        <li><code>title</code></li>
+        <li><code>content</code></li>
+        <li><code>file</code> (optional cover image)</li>
+      </ul>
+      <dd>
+        If no validation errors are present, creates a new post in the databaes.
+        Otherwise, retuns the errors as the response.
+      </dd>
+      <hr />
+
+      <dt>(Protected) <code>PUT /posts/:id</code></dt>
+      <dd>Update a post. Request body is expected to contain the following:</dd>
+      <ul>
+        <li><code>title</code></li>
+        <li><code>content</code></li>
+        <li><code>file</code> (optional cover image)</li>
+      </ul>
+      <dd>
+        If no validation errors are present, updates the post. Otherwise, retuns
+        the errors as the response.
+      </dd>
+      <hr />
+
+      <dt>(Protected) <code>DELETE /posts/:id</code></dt>
+      <dd>
+        Delete a post and all of its associated comments. If the post is not
+        found, returns an error response.
+      </dd>
+      <hr />
+    </dl>
+
+    <h3><code>/comments</code></h3>
+
+    <dt><code>(Protected) GET /comments</code></dt>
+    <dd>
+      Get all the comments in the database. Accepts a query string parameter
+      <code>sort</code> to sort the comments.
+    </dd>
+    <hr />
+
+    <dt><code>(Protected) GET /comments/:id</code></dt>
+    <dd>
+      Get a specific comments from the database. If the comment is not present,
+      returns an error 404 response.
+    </dd>
+    <hr />
+
+    <dt><code>(Protected) POST /comments/:postId</code></dt>
+    <dd>Request body is expected to contain the following:</dd>
+    <ul>
+      <li><code>content</code></li>
+    </ul>
+    <dd>
+      If no validation errors are present, creates a new comment. Otherwise,
+      returns the validation errors.
+    </dd>
+    <hr />
+
+    <dt><code>(Protected) PUT /comments/:id</code></dt>
+    <dd>Request body is expected to contain the following:</dd>
+    <ul>
+      <li><code>content</code></li>
+    </ul>
+    <dd>
+      If no validation errors are present, updates a comment. Otherwise, returns
+      the validation errors.
+    </dd>
+    <hr />
+
+    <dt><code>(Protected) DELETE /comments/:id</code></dt>
+    <dd>
+      Delete a specific comment. If the comment is not found, returns an error
+      response.
+    </dd>
   </body>
 </html>

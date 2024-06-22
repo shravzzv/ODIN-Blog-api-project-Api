@@ -20,6 +20,7 @@ exports.getPosts = asyncHandler(async (req, res) => {
     .limit(limit)
     .skip(skip)
     .sort(sort?.split(',').join(' '))
+    .populate('comments')
 
   // limit limits the number of results, if 0 or empty returns all
   // skip skips the results, if 0 or empty, doesn't skip anything
@@ -33,7 +34,7 @@ exports.getPosts = asyncHandler(async (req, res) => {
 exports.getPost = asyncHandler(async (req, res) => {
   const post = await Post.findById(req.params.id).populate('comments')
 
-  if (!post) return res.status(404).send('Not found.')
+  if (!post) return res.status(404).json({ message: 'Not found.' })
   res.json(post)
 })
 
@@ -75,7 +76,7 @@ exports.createPost = [
       if (req.imageError)
         allErrors.push({ path: 'file', msg: req.imageError.message })
 
-      res.status(422).json(allErrors)
+      res.status(422).json({ errors: allErrors })
     }
   }),
 ]
@@ -119,7 +120,7 @@ exports.updatePost = [
       if (req.imageError)
         allErrors.push({ path: 'file', msg: req.imageError.message })
 
-      res.status(422).json(allErrors)
+      res.status(422).json({ errors: allErrors })
     }
   }),
 ]
@@ -129,7 +130,7 @@ exports.updatePost = [
  */
 exports.deletePost = asyncHandler(async (req, res) => {
   const post = await Post.findById(req.params.id)
-  if (!post) return res.status(404).send('Not found')
+  if (!post) return res.status(404).json({ message: 'Post not found' })
 
   if (post.coverImgUrl)
     await cloudinaryUtils.deleteUploadedFile(post.coverImgUrl)
@@ -141,5 +142,5 @@ exports.deletePost = asyncHandler(async (req, res) => {
 
   await Post.findByIdAndDelete(req.params.id)
 
-  res.status(200).send('Post deleted successfully.')
+  res.json({ message: 'Post deleted successfully.' })
 })

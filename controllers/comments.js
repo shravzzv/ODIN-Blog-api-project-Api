@@ -20,7 +20,7 @@ exports.getComments = asyncHandler(async (req, res) => {
  */
 exports.getComment = asyncHandler(async (req, res) => {
   const comment = await Comment.findById(req.params.id)
-  if (!comment) return res.status(404).send('Not found.')
+  if (!comment) return res.status(404).json({ message: 'Not found.' })
   res.json(comment)
 })
 
@@ -56,7 +56,7 @@ exports.createComment = [
 
       res.json(newComment)
     } else {
-      res.status(422).json(errors.array())
+      res.status(422).json({ errors: errors.array() })
     }
   }),
 ]
@@ -85,7 +85,7 @@ exports.updateComment = [
       await Comment.findByIdAndUpdate(req.params.id, updatedComment)
       res.json(updatedComment)
     } else {
-      res.status(422).json(errors.array())
+      res.status(422).json({ errors: errors.array() })
     }
   }),
 ]
@@ -96,7 +96,7 @@ exports.updateComment = [
 exports.deleteComment = asyncHandler(async (req, res) => {
   const comment = await Comment.findById(req.params.id)
 
-  if (!comment) return res.status(404).send('Not found')
+  if (!comment) return res.status(404).json({ message: 'Not found' })
 
   // remove the comment from the post
   await Post.findByIdAndUpdate(comment.post, {
@@ -105,5 +105,5 @@ exports.deleteComment = asyncHandler(async (req, res) => {
 
   await Comment.findByIdAndDelete(req.params.id)
 
-  res.status(200).send('Comment deleted successfully.')
+  res.status(200).json({ message: 'Comment deleted successfully.' })
 })
