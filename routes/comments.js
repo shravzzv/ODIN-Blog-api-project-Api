@@ -1,9 +1,9 @@
 const express = require('express')
 const router = express.Router()
 const commentsController = require('../controllers/comments')
-const passport = require('passport')
+const protect = require('../middlewares/protect.middleware')
 
-router.use(passport.authenticate('jwt', { session: false }))
+router.use(protect)
 
 // GET all comments
 router.get('/', commentsController.getComments)

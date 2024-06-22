@@ -5,7 +5,6 @@ const { body, validationResult, matchedData } = require('express-validator')
 const bcrypt = require('bcryptjs')
 const multerUtils = require('../utils/multer.util')
 const handleImage = require('../middlewares/handleImage')
-const passport = require('passport')
 const jwt = require('jsonwebtoken')
 
 /**
@@ -83,21 +82,22 @@ exports.signup = [
       includeOptionals: true,
     })
 
-    const user = new User({
+    const newUser = new User({
       ...sanitizedInput,
       profilePicUrl: req.uploadedUrl || '',
     })
 
     if (errors.isEmpty() && !req.imageError) {
       const hashedPassword = await bcrypt.hash(matchedData(req).password, 10)
-      user.password = hashedPassword
+      newUser.password = hashedPassword
 
-      await user.save()
+      await newUser.save()
 
-      res.json({
-        user,
-        message: 'New account has been created, you can now sign in.',
+      const token = jwt.sign({ id: newUser.id }, process.env.JWT_SECRET, {
+        expiresIn: '2h',
       })
+
+      res.json({ token })
     } else {
       const allErrors = errors.array()
       if (req.imageError)
@@ -124,54 +124,38 @@ exports.signin = [
     .bail()
     .isLength({ max: 20 })
     .withMessage('username must be a maximum of 20 characters long.')
+    .bail()
     .escape()
     .custom(async (username, { req }) => {
-      const user = await User.findOne({ username }, '_id')
-      if (user) req.body.userId = user.id
-      if (!user) throw new Error(`Username doesn't exist.`)
+      const user = await User.findOne({ username }, '_id password')
+      if (user) req.user = user
+      if (!user) throw new Error(`Username ${username} doesn't exist.`)
     }),
 
   body('password')
     .trim()
     .isLength({ min: 8 })
-    .withMessage('Password must be atleast 8 characters long.'),
+    .withMessage('Password must be atleast 8 characters long.')
+    .bail()
+    .custom(async (password, { req }) => {
+      if (req.user && !(await bcrypt.compare(password, req.user.password))) {
+        throw new Error('Incorrect password.')
+      }
+    }),
 
   asyncHandler(async (req, res, next) => {
     const errors = validationResult(req)
 
     if (errors.isEmpty()) {
-      next()
+      const token = jwt.sign({ id: req.user.id }, process.env.JWT_SECRET, {
+        expiresIn: '2h',
+      })
+
+      res.json({ token })
     } else {
       return res.status(401).json({ message: 'Failed login', errors })
     }
   }),
-
-  function (req, res, next) {
-    passport.authenticate('local', { session: false }, (err, user, info) => {
-      if (err || !user) {
-        return res.status(400).json({
-          message: 'Authentication failed',
-          user: user,
-          info,
-        })
-      }
-      req.login(user, { session: false }, (err) => {
-        if (err) {
-          res.send(err)
-        }
-        jwt.sign(
-          { id: req.body.userId },
-          process.env.JWT_SECRET,
-          {
-            expiresIn: '24h',
-          },
-          (err, token) => {
-            res.json({ user, token })
-          }
-        )
-      })
-    })(req, res)
-  },
 ]
 
 /**
