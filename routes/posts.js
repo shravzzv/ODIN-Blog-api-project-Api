@@ -9,6 +9,7 @@ router.get('/', postsController.getPosts)
 // GET a single posts
 router.get('/:id', postsController.getPost)
 
+// protect the routes below
 router.use(protect)
 
 // Create a new post

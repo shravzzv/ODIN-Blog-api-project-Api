@@ -4,6 +4,7 @@ const asyncHandler = require('express-async-handler')
 const { body, validationResult, matchedData } = require('express-validator')
 const bcrypt = require('bcryptjs')
 const multerUtils = require('../utils/multer.util')
+const cloudinaryUtils = require('../utils/cloudinary.util')
 const handleImage = require('../middlewares/handleImage')
 const jwt = require('jsonwebtoken')
 
@@ -94,7 +95,7 @@ exports.signup = [
       await newUser.save()
 
       const token = jwt.sign({ id: newUser.id }, process.env.JWT_SECRET, {
-        expiresIn: '2h',
+        expiresIn: '12h',
       })
 
       res.json({ token })
@@ -148,7 +149,7 @@ exports.signin = [
 
     if (errors.isEmpty()) {
       const token = jwt.sign({ id: req.user.id }, process.env.JWT_SECRET, {
-        expiresIn: '2h',
+        expiresIn: '12h',
       })
 
       res.json({ token })
@@ -170,3 +171,116 @@ exports.userGet = asyncHandler(async (req, res) => {
 
   res.json({ user, posts })
 })
+
+/**
+ * Update a user.
+ */
+exports.userUpdate = [
+  multerUtils.upload.single('file'),
+  handleImage,
+
+  body('firstName')
+    .trim()
+    .isLength({ min: 3 })
+    .withMessage('First name must be atleast 3 characters long.')
+    .bail()
+    .isLength({ max: 20 })
+    .withMessage('First name must be a maximum of 20 characters long.')
+    .escape(),
+
+  body('lastName')
+    .trim()
+    .isLength({ min: 3 })
+    .withMessage('Last name must be atleast 3 characters long.')
+    .bail()
+    .isLength({ max: 20 })
+    .withMessage('Last name must be a maximum of 20 characters long.')
+    .escape(),
+
+  body('email')
+    .trim()
+    .notEmpty()
+    .withMessage('Email must not be empty.')
+    .bail()
+    .isEmail()
+    .withMessage('Email is not a valid email address.')
+    .escape()
+    .custom(async (email, { req }) => {
+      const existingEmail = req.user.email
+      if (email === existingEmail) return true
+
+      const existingUser = await User.findOne({ email }, '_id')
+      if (existingUser) throw new Error(`E-mail already in use.`)
+    }),
+
+  body('username')
+    .trim()
+    .isLength({ min: 3 })
+    .withMessage('username must be atleast 3 characters long.')
+    .bail()
+    .isLength({ max: 20 })
+    .withMessage('username must be a maximum of 20 characters long.')
+    .escape()
+    .custom(async (username, { req }) => {
+      const currentUsername = req.user.username
+      if (username === currentUsername) return true
+
+      const existingUser = await User.findOne({ username }, '_id')
+      if (existingUser) throw new Error(`Username already in use.`)
+    }),
+
+  body('bio').trim().optional().escape(),
+
+  asyncHandler(async (req, res) => {
+    const errors = validationResult(req)
+    const sanitizedInput = matchedData(req, {
+      onlyValidData: false,
+      includeOptionals: true,
+    })
+
+    const newUser = new User({
+      ...sanitizedInput,
+      profilePicUrl: req.uploadedUrl || '',
+    })
+
+    if (errors.isEmpty() && !req.imageError) {
+      const hashedPassword = await bcrypt.hash(matchedData(req).password, 10)
+      newUser.password = hashedPassword
+
+      await newUser.save()
+
+      const token = jwt.sign({ id: newUser.id }, process.env.JWT_SECRET, {
+        expiresIn: '2h',
+      })
+
+      res.json({ token })
+    } else {
+      const allErrors = errors.array()
+      if (req.imageError)
+        allErrors.push({
+          msg: req.imageError.message,
+          path: 'file',
+        })
+
+      return res
+        .status(401)
+        .json({ message: 'Failed signup', errors: allErrors })
+    }
+  }),
+]
+
+/**
+ * Deletes a user.
+ * A user can be deleted only when they have no posts.
+ */
+exports.userDelete = asyncHandler(async (req, res) => {
+  // delete user profilePicture from cloudinary if present
+  if (req.user.profilePicUrl) {
+    await cloudinaryUtils.deleteUploadedFile(req.user.profilePicUrl)
+  }
+
+  await User.findByIdAndDelete(req.user.id)
+  res.send('User deleted successfully.')
+})
+
+// todo: implement the delete and update user routes

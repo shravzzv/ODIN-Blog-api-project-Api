@@ -3,6 +3,7 @@ const router = express.Router()
 const commentsController = require('../controllers/comments')
 const protect = require('../middlewares/protect.middleware')
 
+// protect all these routes
 router.use(protect)
 
 // GET all comments
