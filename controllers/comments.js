@@ -54,7 +54,12 @@ exports.createComment = [
         }),
       ])
 
-      res.json(newComment)
+      // to populate the author
+      const newCommentPopulated = await Comment.findById(
+        newComment.id
+      ).populate('author')
+
+      res.json(newCommentPopulated)
     } else {
       res.status(422).json({ errors: errors.array() })
     }

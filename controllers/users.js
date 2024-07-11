@@ -76,7 +76,7 @@ exports.signup = [
 
   body('bio').trim().optional().escape(),
 
-  asyncHandler(async (req, res, next) => {
+  asyncHandler(async (req, res) => {
     const errors = validationResult(req)
     const sanitizedInput = matchedData(req, {
       onlyValidData: false,
@@ -98,7 +98,7 @@ exports.signup = [
         expiresIn: '12h',
       })
 
-      res.json({ token })
+      res.json({ token, userId: newUser.id })
     } else {
       const allErrors = errors.array()
       if (req.imageError)
@@ -144,7 +144,7 @@ exports.signin = [
       }
     }),
 
-  asyncHandler(async (req, res, next) => {
+  asyncHandler(async (req, res) => {
     const errors = validationResult(req)
 
     if (errors.isEmpty()) {
@@ -152,9 +152,11 @@ exports.signin = [
         expiresIn: '12h',
       })
 
-      res.json({ token })
+      res.json({ token, userId: req.user.id })
     } else {
-      return res.status(401).json({ message: 'Failed login', errors })
+      return res
+        .status(401)
+        .json({ message: 'Failed login', errors: errors.array() })
     }
   }),
 ]
@@ -165,7 +167,7 @@ exports.signin = [
 exports.userGet = asyncHandler(async (req, res) => {
   const user = await User.findById(req.params.id)
 
-  if (!user) return res.status(401).json({message: 'User does not exist.'})
+  if (!user) return res.status(401).json({ message: 'User does not exist.' })
 
   const posts = await Post.find({ author: req.params.id }).populate('comments')
 
@@ -258,7 +260,7 @@ exports.userUpdate = [
 
     if (errors.isEmpty() && !req.imageError) {
       await User.findByIdAndUpdate(req.user.id, updatedUser)
-      res.json({ message: 'User updated successfully.' })
+      res.json({ message: 'User updated successfully.', updatedUser })
     } else {
       const allErrors = errors.array()
 
