@@ -9,21 +9,22 @@ const cloudinaryUtils = require('../utils/cloudinary.util')
 /**
  * Gets all the posts from the collection.
  * Allows for sorting the posts using created time, updated time and the titles.
- * Allows for pagination.
+ * Allows for pagination and filtering as well.
  *
- * todo: implement filtering (you can filter by user, date created, or date updated, publishing status, etc.).
+ * `limit` limits the number of results, if 0 or empty returns all and `skip` skips the results, if 0 or empty, doesn't skip anything.
  */
 exports.getPosts = asyncHandler(async (req, res) => {
-  const { sort, limit, skip } = req.query
+  const { sort, limit, skip, isPublished } = req.query
+  const query = {}
+  if (isPublished) {
+    query.isPublished = isPublished === 'true'
+  }
 
-  const posts = await Post.find()
+  const posts = await Post.find(query)
     .limit(limit)
     .skip(skip)
     .sort(sort?.split(',').join(' '))
     .populate('comments')
-
-  // limit limits the number of results, if 0 or empty returns all
-  // skip skips the results, if 0 or empty, doesn't skip anything
 
   res.json(posts)
 })
@@ -32,7 +33,12 @@ exports.getPosts = asyncHandler(async (req, res) => {
  * Gets a single post with its comments.
  */
 exports.getPost = asyncHandler(async (req, res) => {
-  const post = await Post.findById(req.params.id).populate('comments')
+  const post = await Post.findById(req.params.id).populate({
+    path: 'comments',
+    populate: {
+      path: 'author',
+    },
+  })
 
   if (!post) return res.status(404).json({ message: 'Not found.' })
   res.json(post)
@@ -64,8 +70,9 @@ exports.createPost = [
     const post = new Post({
       title,
       content,
-      author: req.user.id,
+      author: '66766070634c7c7536fc2dca', // user id of user Sai Shravan with username shravzzv because only I can add new posts
       coverImgUrl: req.uploadedUrl || '',
+      isPublished: req.body.isPublished || false,
     })
 
     if (errors.isEmpty() && !req.imageError) {
@@ -109,7 +116,8 @@ exports.updatePost = [
       ...post._doc,
       title,
       content,
-      coverImgUrl: req.uploadedUrl || '',
+      coverImgUrl: req.uploadedUrl || req.body.coverImgUrl || '',
+      isPublished: req.body.isPublished || false,
     })
 
     if (errors.isEmpty() && !req.imageError) {
